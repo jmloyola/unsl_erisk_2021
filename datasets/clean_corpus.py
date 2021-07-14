@@ -3,14 +3,14 @@ import re
 import argparse
 
 
-# paths used to save the datasets obtained
+# Paths used to save the datasets obtained
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 PATH_INTERIM_CORPUS = os.path.join(CURRENT_PATH, 'interim')
 
-# token used to identify the end of each post
+# Token used to identify the end of each post
 END_OF_POST_TOKEN = '$END_OF_POST$'
 
-# regexes
+# Regexes
 UNICODE_REGEX = re.compile(r' #(?P<unicode>\d+);')
 HTML_REGEX = re.compile(r'[ &](?P<html>amp|lt|gt);')
 URL_FORMAT_PATTERN = re.compile(r'\[[^]]+?\]\(.+?\)')
@@ -22,15 +22,13 @@ NOT_WORD_REGEX = re.compile(r"[^a-z0-9 ']")
 
 
 def replace_unicode(match):
-    """Replace unicode code value with symbol.
-    """
+    """Replace unicode code value with symbol."""
     unicode_value = int(match.group('unicode'))
     return chr(unicode_value)
 
 
 def replace_html_characters(match):
-    """Replace HTML code value with symbol.
-    """
+    """Replace HTML code value with symbol."""
     html_character = match.group('html')
     if html_character == 'amp':
         return '&'
@@ -41,6 +39,7 @@ def replace_html_characters(match):
 
 
 def get_cleaned_post(post):
+    """Clean post."""
     # Transform post to lowercase.
     clean_post = post.lower()
     # Replace unicode values with their symbol.

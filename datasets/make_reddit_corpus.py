@@ -11,29 +11,29 @@ import re
 import glob
 import shutil
 
-# paths used to save the datasets obtained
+# Paths used to save the datasets obtained
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 PATH_RAW_CORPUS = os.path.join(CURRENT_PATH, 'raw')
 PATH_INTERIM_CORPUS = os.path.join(CURRENT_PATH, 'interim')
 
-# token used to identify the end of each post
+# Token used to identify the end of each post
 END_OF_POST_TOKEN = '$END_OF_POST$'
 
-# values used to filter the final dataset
+# Values used to filter the final dataset
 MIN_NUM_WRITINGS = 30
 MIN_AVG_WORDS = 15
 
-# information related to the requests to reddit
+# Information related to the requests to reddit
 NUMBER_LIMIT = 100
 USER_AGENT = 'chrome_win7_64:erisk_bot:v1 (erisk_2021)'
 TIMEOUT_LIMIT = 5
 
-# regexes
+# Regexes
 USER_NAME_REGEX = re.compile(r'\bu/[a-zA-Z\-0-9_]+')
 BOT_REGEX = re.compile(r"(\bi(\)? \^{0,2}\(?a|')m\)? \^{0,2}\(?a\)? \^{0,2}\(?(ro)?bot\)?\b)|(this is a bot\b)",
                        flags=re.IGNORECASE)
 
-# list of excluded users, posts and subreddits
+# List of excluded users, posts and subreddits
 EXCLUDED_USERS = ['[deleted]', 'AutoModerator', 'LoansBot', 'GoodBot_BadBot', 'B0tRank']
 EXCLUDED_POSTS = ['[deleted]', '[removed]', 'removed by moderator']
 EXCLUDED_SUBREDDITS = ['copypasta']
@@ -270,19 +270,19 @@ def process_post(link, ids, posts_already_processed, subreddit_name, lock, outpu
 def sort_comments(post_comments):
     """Sort comments based on the time they were posted.
 
-        Parameters
-        ----------
-        post_comments : list of dict
-            List of dictionaries with comments of a user in a post.
-            Each dictionary has two keys: time and content.
+    Parameters
+    ----------
+    post_comments : list of dict
+        List of dictionaries with comments of a user in a post.
+        Each dictionary has two keys: time and content.
 
-        Returns
-        -------
-        comments_sorted : list of str
-            List of str with comments of a user in a post sorted.
-        number_comments : int
-            Number of comments of the user in a particular post.
-        """
+    Returns
+    -------
+    comments_sorted : list of str
+        List of str with comments of a user in a post sorted.
+    number_comments : int
+        Number of comments of the user in a particular post.
+    """
     number_comments = len(post_comments)
     sorted_comments_with_times = sorted(post_comments, key=lambda comentario: comentario['time'])
     comments_sorted = [c['content'] for c in sorted_comments_with_times]
