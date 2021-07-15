@@ -2,9 +2,11 @@ import json
 import pickle
 import numpy as np
 import gensim
+import os
 
 from models.representation import get_doc2vec_representation, get_bow_representation
 
+PICKLE_PROTOCOL = 4
 
 # Token used to identify the end of each post
 END_OF_POST_TOKEN = '$END_OF_POST$'
@@ -77,30 +79,19 @@ class EarlyModel:
     ----------
     representation_type : {'bow', 'doc2vec'}
         The representation type to use.
-    trained_representation_path : str
-        The path to the trained representation.
-    trained_classifier_path : str
-        The path to the trained classifier.
+    trained_representation : tuple of CountVectorizer, TfidfTransformer or gensim.Doc2Vec
+        The trained representation.
+    trained_classifier : sklearn.BaseEstimator
+        The trained classifier.
     stop_criterion : SimpleStopCriterion
         The decision policy to determine when to send an alarm.
     """
-    def __init__(self, representation_type, trained_representation_path, trained_classifier_path, stop_criterion):
-        self.representation_type = representation_type
-        self.trained_representation_path = trained_representation_path
-        self.trained_classifier_path = trained_classifier_path
-
-        # Load trained representation.
-        if self.representation_type == 'bow':
-            with open(self.trained_representation_path, 'rb') as fp:
-                self.representation = pickle.load(fp)
-        elif self.representation_type == 'doc2vec':
-            self.representation = gensim.models.doc2vec.Doc2Vec.load(self.trained_representation_path)
-        else:
+    def __init__(self, representation_type, trained_representation, trained_classifier, stop_criterion):
+        if representation_type not in ['bow', 'doc2vec']:
             raise Exception('Representation not implemented.')
-
-        # Load trained classifier.
-        with open(self.trained_classifier_path, 'rb') as fp:
-            self.classifier = pickle.load(fp)
+        self.representation_type = representation_type
+        self.representation = trained_representation
+        self.classifier = trained_classifier
 
         self.stop_criterion = stop_criterion
         self.predictions = None
@@ -206,15 +197,32 @@ class EarlyModel:
     def save(self, path_json):
         """Save the information and state of the EarlyModel.
 
+        Also save the trained representation and classifier in the same
+        folder.
+
         Parameters
         ----------
         path_json : str
             Path to save the information and state of the model.
         """
+        base_path = os.path.dirname(path_json)
+        file_name = os.path.basename(path_json).split('.')[0]
+
+        trained_representation_path = os.path.join(base_path, file_name + '_trained_representation.pkl')
+        if self.representation_type == 'bow':
+            with open(trained_representation_path, 'wb') as fp:
+                pickle.dump(self.representation, fp, protocol=PICKLE_PROTOCOL)
+        else:
+            self.representation.save(trained_representation_path)
+
+        trained_classifier_path = os.path.join(base_path, file_name + '_trained_classifier.pkl')
+        with open(trained_classifier_path, 'wb') as fp:
+            pickle.dump(self.classifier, fp, protocol=PICKLE_PROTOCOL)
+
         model_information = {
             'representation_type': self.representation_type,
-            'trained_representation_path': self.trained_representation_path,
-            'trained_classifier_path': self.trained_classifier_path,
+            'trained_representation_path': trained_representation_path,
+            'trained_classifier_path': trained_classifier_path,
             'criterion_params': self.stop_criterion.get_parameters(),
             'num_post_processed': self.num_post_processed,
             'delays': self.delays.tolist(),
@@ -232,7 +240,7 @@ class EarlyModel:
         Parameters
         ----------
         path_json : str
-            Path to the file containing the state of the EARLIEST model.
+            Path to the file containing the state of the EarlyModel.
 
         Returns
         --------
@@ -244,11 +252,24 @@ class EarlyModel:
         representation_type = model_information['representation_type']
         trained_representation_path = model_information['trained_representation_path']
         trained_classifier_path = model_information['trained_classifier_path']
+        # Load trained representation.
+        if representation_type == 'bow':
+            with open(trained_representation_path, 'rb') as fp:
+                trained_representation = pickle.load(fp)
+        elif representation_type == 'doc2vec':
+            trained_representation = gensim.models.doc2vec.Doc2Vec.load(trained_representation_path)
+        else:
+            trained_representation = None
+
+        # Load trained classifier.
+        with open(trained_classifier_path, 'rb') as fp:
+            trained_classifier = pickle.load(fp)
+
         criterion_params = model_information['criterion_params']
         stop_criterion = SimpleStopCriterion(**criterion_params)
         early_model = EarlyModel(representation_type=representation_type,
-                                 trained_representation_path=trained_representation_path,
-                                 trained_classifier_path=trained_classifier_path,
+                                 trained_representation=trained_representation,
+                                 trained_classifier=trained_classifier,
                                  stop_criterion=stop_criterion)
         early_model.num_post_processed = model_information['num_post_processed']
         early_model.delays = np.array(model_information['delays'])
