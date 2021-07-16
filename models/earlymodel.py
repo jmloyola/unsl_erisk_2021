@@ -103,7 +103,7 @@ class EarlyModel:
     def __repr__(self):
         str_representation = "EarlyModel:" + \
                              "\n--- Representation ---\n" + \
-                             self.representation.__repr__() + \
+                             self.representation.__str__() + \
                              "\n--- Classifier ---\n" + \
                              self.classifier.__repr__() + \
                              "\n--- Decision policy ----\n" + \
