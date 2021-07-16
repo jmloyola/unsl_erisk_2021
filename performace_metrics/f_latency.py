@@ -20,6 +20,24 @@ def speed(y_pred, y_true, d, p):
 
 
 def f_latency(labels, true_labels, delays, penalty):
+    """F Latency performance measure.
+
+    Parameters
+    ----------
+    labels : numpy.ndarray
+        The numpy array of the predicted labels.
+    true_labels : list of int
+        The list of the true labels.
+    delays : numpy.ndarray
+        The delays to give a response for every user.
+    penalty : float
+        The penalty for a delayed classification.
+
+    Returns
+    -------
+    float
+        The F Latency.
+    """
     f1_score = metrics.f1_score(y_pred=labels, y_true=true_labels, average='binary')
     speed_value = speed(y_pred=labels, y_true=true_labels, d=delays, p=penalty)
 
