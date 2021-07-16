@@ -37,16 +37,15 @@ class SS3:
         self.__model__ = ss3_model
         self.__policy_value__ = policy_value
 
-    def __str__(self):
+    def __repr__(self):
         smoothness, significance, sanction, alpha = self.__model__.get_hyperparameters()
-        str_representation = ("SS3:\n",
-                              f"smoothness = {smoothness} (σ),\n",
-                              f"significance = {significance} (λ),\n",
-                              f"sanction = {sanction} (ρ),\n",
-                              f"alpha = {alpha} (α)\n"
-                              "- " * 13 + "\n",
-                              f"policy value = {self.__policy_value__}\n"
-                              )
+        str_representation = "SS3:\n" + \
+                             f"smoothness = {smoothness} (σ),\n" + \
+                             f"significance = {significance} (λ),\n" + \
+                             f"sanction = {sanction} (ρ),\n" + \
+                             f"alpha = {alpha} (α)\n" + \
+                             "- " * 13 + "\n" + \
+                             f"policy value = {self.__policy_value__}\n"
         return str_representation
 
     @staticmethod
