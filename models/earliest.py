@@ -85,19 +85,36 @@ class EARLIEST(nn.Module):
     ----------
     n_inputs : int
         Number of features in the input data.
-    n_classes : int
+    n_classes : int, default=1
         Number of classes in the input labels.
-    n_hidden : int
+    n_hidden : int, default=50
         Number of dimensions in the RNN's hidden states.
-    n_layers : int
+    n_layers : int, default=1
         Number of layers in the RNN.
-    lam : float
+    lam : float, default=0.0001
         Earliness weight, i.e., emphasis on earliness.
+    num_epochs : int, default=100
+        Number of epochs use during training.
+    drop_p : float, default=0
+        Dropout probability. If non-zero, introduces a dropout layer on
+        the outputs of each LSTM layer except the last layer.
+    weights : torch.Tensor
+        Weights for each class.
+    device : str, default='cpu'
+        Device to run the model from.
+    max_sequence_length : int, default=200
+        Maximum number of posts to represent per user.
+    is_competition : bool, default=True
+        Flag to indicate if run in the challenge.
+    representation : gensim.models.doc2vec.Doc2Vec, default=None
+        Trained representation to use for each post.
+    representation_path : str, default=None
+        Path to the trained representation.
     """
 
-    def __init__(self, n_inputs=1, n_classes=1, n_hidden=50, n_layers=1, lam=0.0, num_epochs=100,
-                 drop_p=0, weights=None, device='cpu', representation_path=None,
-                 max_sequence_length=200, is_competition=True):
+    def __init__(self, n_inputs, n_classes=1, n_hidden=50, n_layers=1, lam=0.0001, num_epochs=100,
+                 drop_p=0, weights=None, device='cpu', max_sequence_length=200, is_competition=True,
+                 representation=None, representation_path=None):
         super(EARLIEST, self).__init__()
 
         # --- Hyper-parameters ---
@@ -110,8 +127,10 @@ class EARLIEST(nn.Module):
 
         self.is_competition = is_competition
 
+        if representation is None and representation_path is None:
+            raise Exception("You should provide the trained representation or the path to it.")
+        self.representation = representation
         self.representation_path = representation_path
-        self.representation = None
         self.last_docs_rep = None
         self.last_num_posts_processed = None
         self.num_post_processed = 0
@@ -157,6 +176,8 @@ class EARLIEST(nn.Module):
     def save(self, path_json):
         """Save the EARLIEST's state and learnable parameters to disk.
 
+        Also save the trained representation in the same folder.
+
         Parameters
         ----------
         path_json : str
@@ -167,8 +188,14 @@ class EARLIEST(nn.Module):
         The learnable parameters are stored in a file with the same name
         as `path_json` but with extension `.pt`.
         """
-        filename, file_extension = os.path.splitext(path_json)
-        state_dict_path = filename + '.pt'
+        base_path = os.path.dirname(os.path.abspath(path_json))
+        file_name = os.path.basename(os.path.abspath(path_json)).split('.')[0]
+
+        if self.representation_path is None:
+            self.representation_path = os.path.join(base_path, file_name + '_trained_representation.pkl')
+        self.representation.save(self.representation_path)
+
+        state_dict_path = os.path.join(base_path, file_name + '.pt')
         model_params = {
             'n_inputs': self.n_inputs,
             'n_classes': self.n_classes,
@@ -558,4 +585,98 @@ class EARLIEST(nn.Module):
         self.wait_penalty = self.halt_probs.sum(1).mean()  # Penalize late predictions
 
         loss = self.loss_r + self.loss_b + self.loss_c + self.lam * self.wait_penalty
-        return loss, self.loss_r, self.loss_b, self.loss_c, self.lam * self.wait_penalty
+        return loss
+
+
+def train_earliest_model(earliest_model, earliest_optimizer, earliest_scheduler, loader, current_epoch, device,
+                         num_epochs):
+    """Train EARLIEST model.
+
+    Parameters
+    ----------
+    earliest_model : EARLIEST
+        The EARLIEST model to train.
+    earliest_optimizer : torch.optim.Optimizer
+        The optimizer to use.
+    earliest_scheduler : torch.optim._LRScheduler
+        The scheduler for the learning rate to use.
+    loader : torch.utils.data.DataLoader
+        The DataLoader with the training data.
+    current_epoch : int
+        The current epoch of training.
+    device : torch.device
+        The device use to run the model.
+    num_epochs : int
+        The total number of epoch to train.
+
+    Returns
+    -------
+    torch.Tensor
+        The training delays
+    float
+        The sum of the loss.
+    """
+    training_delays = []
+    _loss_sum = 0.0
+
+    for i, batch in enumerate(loader):
+        y, x = batch
+        x, y = x.to(device), y.to(device)
+
+        x = torch.transpose(x, 0, 1)
+        # --- Forward pass ---
+        logits, halting_points, halting_points_mean = earliest_model(x, current_epoch)
+
+        training_delays.append(halting_points)
+
+        # --- Compute gradients and update weights ---
+        earliest_optimizer.zero_grad()
+        loss = earliest_model.compute_loss(logits.squeeze(1), y)
+        loss.backward()
+
+        _loss_sum += loss.item()
+
+        earliest_optimizer.step()
+
+        if (i + 1) % 10 == 0:
+            print('Epoch [{}/{}], Batch [{}/{}], Loss: {:.4f}'.format(current_epoch + 1, num_epochs, i + 1,
+                                                                      len(loader),
+                                                                      loss.item()))
+    earliest_scheduler.step()
+
+    return torch.cat(training_delays), _loss_sum
+
+
+def validate_earliest_model(earliest_model, loader, device):
+    """Validate EARLIEST model.
+
+        Parameters
+        ----------
+        earliest_model : EARLIEST
+            The EARLIEST model to train.
+        loader : torch.utils.data.DataLoader
+            The DataLoader with the validation data.
+        device : torch.device
+            The device use to run the model.
+
+        Returns
+        -------
+        float
+            The sum of the loss.
+        """
+    _validation_epoch_loss = 0.0
+
+    earliest_model.eval()
+    with torch.no_grad():
+        for i, batch in enumerate(loader):
+            y_val, x_val = batch
+            x_val, y_val = x_val.to(device), y_val.to(device)
+
+            x_val = torch.transpose(x_val, 0, 1)
+            logits_val, halting_points_val, halting_points_val_mean = earliest_model(x_val, test=True)
+
+            loss_val, loss_val_r, loss_val_b, loss_val_c, loss_val_e = \
+                earliest_model.compute_loss(logits_val.squeeze(1), y_val)
+            _validation_epoch_loss += loss_val.item()
+
+    return _validation_epoch_loss
