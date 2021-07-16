@@ -6,6 +6,7 @@ import os
 
 from models.representation import get_doc2vec_representation, get_bow_representation
 
+
 PICKLE_PROTOCOL = 4
 
 # Token used to identify the end of each post
@@ -27,11 +28,10 @@ class SimpleStopCriterion:
         self.threshold = threshold
         self.min_delay = min_delay
 
-    def __str__(self):
-        str_representation = ("SimpleStopCriterion:\n",
-                              f"Threshold = {self.threshold}\n",
-                              f"Min delay = {self.min_delay}\n",
-                              )
+    def __repr__(self):
+        str_representation = "SimpleStopCriterion:\n" + \
+                             f"Threshold = {self.threshold}\n" + \
+                             f"Min delay = {self.min_delay}"
         return str_representation
 
     def __eq__(self, other):
@@ -79,7 +79,7 @@ class EarlyModel:
     ----------
     representation_type : {'bow', 'doc2vec'}
         The representation type to use.
-    trained_representation : tuple of CountVectorizer, TfidfTransformer or gensim.Doc2Vec
+    trained_representation : {tuple of CountVectorizer, TfidfTransformer, gensim.Doc2Vec}
         The trained representation.
     trained_classifier : sklearn.BaseEstimator
         The trained classifier.
@@ -100,18 +100,14 @@ class EarlyModel:
         self.already_finished = None
         self.num_post_processed = 0
 
-    def __str__(self):
-        str_representation = ("EarlyModel:\n",
-                              "- " * 13 + "\n",
-                              "--- Representation ---\n",
-                              self.representation.__str__(),
-                              "- " * 13 + "\n",
-                              "--- Classifier ---\n",
-                              self.classifier.__str__(),
-                              "- " * 13 + "\n",
-                              "--- Decision policy ----\n",
-                              self.stop_criterion.__str__(),
-                              )
+    def __repr__(self):
+        str_representation = "EarlyModel:" + \
+                             "\n--- Representation ---\n" + \
+                             self.representation.__repr__() + \
+                             "\n--- Classifier ---\n" + \
+                             self.classifier.__repr__() + \
+                             "\n--- Decision policy ----\n" + \
+                             self.stop_criterion.__repr__()
         return str_representation
 
     def get_representation(self, documents):
@@ -205,8 +201,8 @@ class EarlyModel:
         path_json : str
             Path to save the information and state of the model.
         """
-        base_path = os.path.dirname(path_json)
-        file_name = os.path.basename(path_json).split('.')[0]
+        base_path = os.path.dirname(os.path.abspath(path_json))
+        file_name = os.path.basename(os.path.abspath(path_json)).split('.')[0]
 
         trained_representation_path = os.path.join(base_path, file_name + '_trained_representation.pkl')
         if self.representation_type == 'bow':
