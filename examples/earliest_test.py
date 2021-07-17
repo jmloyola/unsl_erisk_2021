@@ -43,13 +43,13 @@ def get_data(users_documents, delay):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Example script for the model EARLIEST.")
     parser.add_argument("corpus", help="eRisk task corpus name", choices=['t1', 't2'])
-    parser.add_argument("device", help="Device to use", choices=['cpu', 'gpu'])
+    parser.add_argument("device", help="Device to use", choices=['cpu', 'cuda'])
     parser.add_argument("-n", "--num_post_limit", help="Number of post to process. In case of 0, the maximum number of "
                                                        "post in the test dataset will be used.", type=int, default=0)
     args = parser.parse_args()
 
     device = args.device
-    if device == 'gpu' and not torch.cuda.is_available():
+    if device == 'cuda' and not torch.cuda.is_available():
         print("CUDA drivers not installed. Device fallback to cpu")
         device = 'cpu'
 
