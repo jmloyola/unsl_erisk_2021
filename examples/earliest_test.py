@@ -43,22 +43,15 @@ def get_data(users_documents, delay):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Example script for the model EARLIEST.")
     parser.add_argument("corpus", help="eRisk task corpus name", choices=['t1', 't2'])
-    parser.add_argument("device", help="Device to use", choices=['auto', 'cpu', 'gpu'])
+    parser.add_argument("device", help="Device to use", choices=['cpu', 'gpu'])
     parser.add_argument("-n", "--num_post_limit", help="Number of post to process. In case of 0, the maximum number of "
                                                        "post in the test dataset will be used.", type=int, default=0)
     args = parser.parse_args()
 
-    if args.device == 'auto':
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    elif args.device == 'gpu':
-        if torch.cuda.is_available():
-            device = torch.device('cuda')
-        else:
-            print("CUDA drivers not installed. Device fallback to cpu")
-            device = torch.device('cpu')
-    else:
-        device = torch.device('cpu')
-    print(f'Device: {device}')
+    device = args.device
+    if device == 'gpu' and not torch.cuda.is_available():
+        print("CUDA drivers not installed. Device fallback to cpu")
+        device = 'cpu'
 
     # Set the random seeds
     random_seed = 30
@@ -182,9 +175,9 @@ if __name__ == '__main__':
                                                              num_epochs=num_epochs)
             training_loss.append(np.round(loss_sum / len(train_loader), 3))
 
-            validation_epoch_loss, = validate_earliest_model(earliest_model=earliest,
-                                                             loader=test_loader,
-                                                             device=device)
+            validation_epoch_loss = validate_earliest_model(earliest_model=earliest,
+                                                            loader=test_loader,
+                                                            device=device)
             validation_loss.append(np.round(validation_epoch_loss / len(test_loader), 3))
 
             if epoch > 5 and validation_epoch_loss < best_validation_loss:

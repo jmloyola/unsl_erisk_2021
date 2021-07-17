@@ -604,8 +604,8 @@ def train_earliest_model(earliest_model, earliest_optimizer, earliest_scheduler,
         The DataLoader with the training data.
     current_epoch : int
         The current epoch of training.
-    device : torch.device
-        The device use to run the model.
+    device : str
+        The device to run the model from.
     num_epochs : int
         The total number of epoch to train.
 
@@ -656,8 +656,8 @@ def validate_earliest_model(earliest_model, loader, device):
             The EARLIEST model to train.
         loader : torch.utils.data.DataLoader
             The DataLoader with the validation data.
-        device : torch.device
-            The device use to run the model.
+        device : str
+            The device to run the model from.
 
         Returns
         -------
@@ -675,8 +675,7 @@ def validate_earliest_model(earliest_model, loader, device):
             x_val = torch.transpose(x_val, 0, 1)
             logits_val, halting_points_val, halting_points_val_mean = earliest_model(x_val, test=True)
 
-            loss_val, loss_val_r, loss_val_b, loss_val_c, loss_val_e = \
-                earliest_model.compute_loss(logits_val.squeeze(1), y_val)
+            loss_val = earliest_model.compute_loss(logits_val.squeeze(1), y_val)
             _validation_epoch_loss += loss_val.item()
 
     return _validation_epoch_loss
