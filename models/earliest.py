@@ -619,6 +619,7 @@ def train_earliest_model(earliest_model, earliest_optimizer, earliest_scheduler,
     training_delays = []
     _loss_sum = 0.0
 
+    earliest_model.train()
     for i, batch in enumerate(loader):
         y, x = batch
         x, y = x.to(device), y.to(device)
