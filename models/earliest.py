@@ -277,6 +277,8 @@ class EARLIEST(nn.Module):
         earliest_model = EARLIEST(**model_params)
         state_dict_path = model_information['state_dict_path']
         earliest_model.load_state_dict(torch.load(state_dict_path, map_location=earliest_model.device), strict=False)
+        if earliest_model.device == 'cuda':
+            earliest_model.to(earliest_model.device)
 
         if earliest_model.is_competition:
             earliest_model.num_post_processed = model_information['num_post_processed']
