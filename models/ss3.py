@@ -193,3 +193,12 @@ class SS3:
                 self.delays[i] = delay
 
         return decisions, scores
+
+    def clear_model_state(self):
+        """Clear the internal state of the model.
+
+        Use this function if loading a pre-trained SS3 model for the
+        first time.
+        """
+        self.__acc_cv__ = None
+        self.delays = None

@@ -274,3 +274,15 @@ class EarlyModel:
         early_model.probabilities = np.array(model_information['probabilities'])
 
         return early_model
+
+    def clear_model_state(self):
+        """Clear the internal state of the model.
+
+        Use this function if loading a pre-trained EarlyModel model for the
+        first time.
+        """
+        self.predictions = None
+        self.probabilities = None
+        self.delays = None
+        self.already_finished = None
+        self.num_post_processed = 0
