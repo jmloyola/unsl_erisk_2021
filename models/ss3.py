@@ -1,5 +1,6 @@
 import pyss3
 import json
+import os
 
 
 class SS3:
@@ -118,11 +119,19 @@ class SS3:
     def save(self, state_path):
         """Save SS3 model's state to disk.
 
+        Also save the trained base classifier in the same folder.
+
         Parameters
         ----------
         state_path : str
             Path to save the state of the model.
         """
+        base_path = os.path.dirname(os.path.abspath(state_path))
+        file_name = os.path.basename(os.path.abspath(state_path)).split('.')[0]
+
+        trained_classifier_path = os.path.join(base_path, file_name + '_trained_base_classifier.json')
+        self.__model__.save_model(trained_classifier_path)
+
         state = {'acc_cv': self.__acc_cv__,
                  'delays': self.delays
                  }
