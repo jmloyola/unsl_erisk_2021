@@ -78,7 +78,7 @@ class SS3:
         return m, sd
 
     @staticmethod
-    def load(state_path, model_folder_path, model_name, policy_value):
+    def load(state_path, model_folder_path, policy_value):
         """Load SS3 model.
 
         Parameters
@@ -90,8 +90,6 @@ class SS3:
             assumes the model checkpoint is placed in a folder named
             "ss3_models". Thus, `model_folder_path` should point to the
             parent folder of the "ss3_models" directory.
-        model_name : str
-            Name of the model to load.
         policy_value : float
             Policy value (gamma) that affects the final decision for each
             user. Note that, if the final score of a user is greater than
@@ -104,7 +102,7 @@ class SS3:
             SS3 loaded model.
         """
         # load model
-        clf = pyss3.SS3(name=model_name)
+        clf = pyss3.SS3(name='model')
         clf.load_model(model_folder_path)
         model = SS3(clf, policy_value)
 
@@ -129,7 +127,7 @@ class SS3:
         base_path = os.path.dirname(os.path.abspath(state_path))
         file_name = os.path.basename(os.path.abspath(state_path)).split('.')[0]
 
-        trained_classifier_path = os.path.join(base_path, file_name + '_trained_base_classifier.json')
+        trained_classifier_path = os.path.join(base_path, file_name + '_trained_base_classifier')
         self.__model__.save_model(trained_classifier_path)
 
         state = {'acc_cv': self.__acc_cv__,
