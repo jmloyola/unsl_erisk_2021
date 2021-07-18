@@ -37,7 +37,7 @@ def get_data(users_documents, delay):
     list of str
         The list with the users' documents up until certain delay.
     """
-    return [END_OF_POST_TOKEN.join(user_posts.split(END_OF_POST_TOKEN)[:delay]) for user_posts in users_documents]
+    return [END_OF_POST_TOKEN.join(_user_posts.split(END_OF_POST_TOKEN)[:delay]) for _user_posts in users_documents]
 
 
 if __name__ == '__main__':
