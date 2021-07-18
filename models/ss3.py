@@ -32,6 +32,7 @@ class SS3:
 
     # state
     __acc_cv__ = None  # []
+    delays = None
 
     def __init__(self, ss3_model, policy_value):
         self.__model__ = ss3_model
@@ -110,6 +111,7 @@ class SS3:
         with open(state_path, "r") as fp:
             state = json.load(fp=fp)
         model.__acc_cv__ = state['acc_cv']
+        model.delays = state['delays']
 
         return model
 
@@ -121,7 +123,9 @@ class SS3:
         state_path : str
             Path to save the state of the model.
         """
-        state = {'acc_cv': self.__acc_cv__}
+        state = {'acc_cv': self.__acc_cv__,
+                 'delays': self.delays
+                 }
         with open(state_path, "w") as fp:
             json.dump(fp=fp, obj=state, indent='\t')
 
@@ -151,6 +155,7 @@ class SS3:
         # initialize the internal state
         if delay - 1 == 0:
             self.__acc_cv__ = [None] * n_users
+            self.delays = [-1] * n_users
 
         clf = self.__model__
         for i, post in enumerate(users_post):
@@ -185,5 +190,6 @@ class SS3:
             user_at_risk = (scores[i] > m + mad_threshold * mad) and delay > 2
             if user_at_risk:
                 decisions[i] = 1
+                self.delays[i] = delay
 
         return decisions, scores
