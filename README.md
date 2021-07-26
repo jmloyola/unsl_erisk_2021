@@ -56,4 +56,4 @@ python -m examples.ss3_test t1 -n 30
 ## Citation
 If you use this code in a scientific publication, we would appreciate citations to the following paper:
 
-> Loyola, J. M., Burdisso, S., Thompson, H., Cagnina, L. & Errecalde, M. (2021). UNSL at eRisk 2021: A Comparison of Three Early Alert Policies for Early Risk Detection. In CLEF (Working Notes).
+> J. M. Loyola, S. Burdisso, H. Thompson, L. Cagnina, M. Errecalde, UNSL at eRisk 2021: A comparison of three early alert policies for early risk detection,  in: Working Notes of CLEF 2021 - Conference and Labs of the Evaluation Forum, Bucarest, Romania, September 21-24, 2021.
