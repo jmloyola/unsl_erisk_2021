@@ -54,7 +54,8 @@ def get_cleaned_post(post):
     clean_post = SUB_REDDIT_REGEX.sub(repl=r'\g<subreddit>', string=clean_post)
     # Remove all characters except for letters, numbers and white spaces.
     clean_post = NOT_WORD_REGEX.sub(repl='', string=clean_post)
-    # Replace numbers with the token `number`.
+    # Replace sequence of numbers with the token `number`. This doesn't hold if
+    # the sequence is not composed of numbers only.
     clean_post = NUMBER_REGEX.sub(repl='number', string=clean_post)
     # Remove repeated white spaces, new lines and tabs.
     clean_post = " ".join(clean_post.split())
@@ -74,7 +75,8 @@ def generate_clean_corpus(corpus_name, replace_old=True):
         - replace direct links to the web with the token weblink;
         - replace internal links to subreddits with the name of the subreddits;
         - delete any character that is not a number or letter;
-        - replace numbers with the token number;
+        - replace numbers with the token number. Note that if the number is inside a word
+            it is not replaced;
         - delete new lines, tab, and multiple consecutive white spaces.
     """
     interim_corpus_path = os.path.join(PATH_INTERIM_CORPUS, corpus_name)
