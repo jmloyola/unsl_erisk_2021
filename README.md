@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/380095338.svg)](https://zenodo.org/badge/latestdoi/380095338)
+
 # UNSL at eRisk 2021
 
 Repository accompanying the CLEF 2021 eRisk Workshop Working Notes for the UNSL team (Universidad Nacional de San Luis).
